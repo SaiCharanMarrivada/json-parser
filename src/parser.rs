@@ -17,6 +17,48 @@ pub enum Value<'a> {
     Null,
 }
 
+/// # Prints the s-expression representation of the json object
+/// Json Grammer is transformed according to the following rules
+/// - `dict = "(" [pair (" " pair)*] ")"`
+/// - `pair = "(" key " " value ")"`
+/// - `list = "(" [value (" "value)*] ")"`
+/// - The keys are printed without quotes
+/// - The atoms `(string | number | "true" | "false" | "null")` are printed as is
+pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
+    let indent_str = "  ".repeat(indent);
+    match val {
+        Value::Dict(map) => {
+            let mut result = String::from("(");
+            for (key, value) in map {
+                result.push_str(&format!(
+                    "\n{}  ({} {})",
+                    indent_str,
+                    key,
+                    pretty_print(value, indent + 1)
+                ));
+            }
+            result.push_str(&format!("\n{})", indent_str));
+            result
+        }
+        Value::List(list) => {
+            let mut result = String::from("(");
+            for item in list {
+                result.push_str(&format!(
+                    "\n{}  {}",
+                    indent_str,
+                    pretty_print(item, indent + 1)
+                ));
+            }
+            result.push_str(&format!("\n{})", indent_str));
+            result
+        }
+        Value::Str(s) => format!("\"{}\"", s),
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => "null".to_string(),
+    }
+}
+
 #[derive(Debug)]
 pub enum ParseError {
     UnexpectedToken(String),
