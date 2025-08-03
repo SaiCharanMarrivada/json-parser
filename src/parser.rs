@@ -2,6 +2,11 @@ use crate::lexer::Token;
 use std::cell::Cell;
 use std::collections::HashMap;
 
+/// # Json Grammar
+/// - `value = dict | list | string | number | "true" | "false" | "null"`
+/// - `list = "[" [value ("," value)*] "]"`
+/// - `dict = "{" [pair ("," pair)*] "}"`
+/// - `pair = string ":" value`
 #[derive(Debug, PartialEq)]
 pub enum Value<'a> {
     Dict(HashMap<&'a str, Box<Value<'a>>>),
@@ -46,6 +51,8 @@ impl Parser {
         }
     }
 
+    /// `dict = "{" pair ("," pair)* "}"`
+    /// `pair = string ":" value`
     fn parse_dict(&self) -> Result<HashMap<&str, Box<Value>>, ParseError> {
         let mut result: HashMap<&str, Box<Value>> = HashMap::new();
         loop {
@@ -85,6 +92,7 @@ impl Parser {
         }
     }
 
+    /// `list = "["value ("," value)*"]"`
     fn parse_list(&self) -> Result<Vec<Box<Value>>, ParseError> {
         let mut result = Vec::new();
         loop {
@@ -113,6 +121,7 @@ impl Parser {
         self.current.set(self.current.get() + 1);
     }
 
+    /// `value = dict | list | string | number | "true" | "false" | "null"`
     fn parse_value(&self) -> Result<Value, ParseError> {
         match &self.tokens[self.current.get()] {
             // atoms

@@ -71,6 +71,7 @@ impl<'a> Lexer<'a> {
                 ':' => self.tokens.push(Token::Colon(self.line)),
                 ',' => self.tokens.push(Token::Comma(self.line)),
                 '"' => {
+                    // unicode is not handled
                     let string_start = self.line;
                     let mut string = String::new();
                     while let Some((_, current)) = source_iter.next() {
