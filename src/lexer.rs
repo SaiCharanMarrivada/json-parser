@@ -79,8 +79,8 @@ impl<'a> Lexer<'a> {
                             string.push(current);
                             self.line += 1
                         } else if current == '\\' {
-                            if let Some((_, current)) = source_iter.peek() {
-                                match *current {
+                            if let Some((_, current)) = source_iter.next() {
+                                match current {
                                     'n' => string.push('\n'),
                                     't' => string.push('\t'),
                                     'r' => string.push('\r'),
@@ -221,6 +221,48 @@ fn test_json_lexer() {
         Token::Str("address".to_string(), 7),
         Token::Colon(7),
         Token::Null(7),
+        Token::RightBrace(8),
+        Token::EOF(9),
+    ];
+
+    assert_eq!(lexer.tokens, expected);
+}
+
+#[test]
+fn test_escape_sequences() {
+    let source = r#"
+{
+    "newline": "Line1\nLine2",
+    "tab": "Column1\tColumn2",
+    "quote": "\"Quoted\"",
+    "backslash": "C:\\\\Program Files\\\\App",
+    "mixed": "Tab\tNew\nLine\rCarriage"
+}
+"#;
+    let mut lexer = Lexer::new(source);
+    lexer.lex().unwrap();
+
+    let expected = vec![
+        Token::LeftBrace(2),
+        Token::Str("newline".to_string(), 3),
+        Token::Colon(3),
+        Token::Str("Line1\nLine2".to_string(), 3),
+        Token::Comma(3),
+        Token::Str("tab".to_string(), 4),
+        Token::Colon(4),
+        Token::Str("Column1\tColumn2".to_string(), 4),
+        Token::Comma(4),
+        Token::Str("quote".to_string(), 5),
+        Token::Colon(5),
+        Token::Str("\"Quoted\"".to_string(), 5),
+        Token::Comma(5),
+        Token::Str("backslash".to_string(), 6),
+        Token::Colon(6),
+        Token::Str("C:\\\\Program Files\\\\App".to_string(), 6),
+        Token::Comma(6),
+        Token::Str("mixed".to_string(), 7),
+        Token::Colon(7),
+        Token::Str("Tab\tNew\nLine\rCarriage".to_string(), 7),
         Token::RightBrace(8),
         Token::EOF(9),
     ];
