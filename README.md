@@ -15,3 +15,23 @@ Json Grammer is transformed according to the following rules
 - `list = "(" [value (" "value)*] ")"`
 - The keys are printed without quotes.
 - The atoms `(string | number | "true" | "false" | "null")` are printed as is.
+
+# Example Usage 
+```rust
+use json_parser::{Lexer, Parser, pretty_print};
+
+let source = r#"
+{
+    "name": "Alice",
+    "age": 30,
+    "is_student": true,
+    "scores": [95.5, 88.0, 76],
+    "address": null
+}
+"#;
+    let mut lexer = Lexer::new(source);
+    let _ = lexer.lex().unwrap();
+    let parser = Parser::new(lexer::tokens);
+    let value = parser.parse().unwrap();
+    println!("{}", pretty_print(value)); // this prints the s-expression for the json-object
+```

@@ -24,7 +24,7 @@ pub enum Value<'a> {
 /// - `list = "(" [value (" "value)*] ")"`
 /// - The keys are printed without quotes.
 /// - The atoms `(string | number | "true" | "false" | "null")` are printed as is.
-pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
+fn _pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
     let indent_str = "  ".repeat(indent);
     match val {
         Value::Dict(map) => {
@@ -34,7 +34,7 @@ pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
                     "\n{}  ({} {})",
                     indent_str,
                     key,
-                    pretty_print(value, indent + 1)
+                    _pretty_print(value, indent + 1)
                 ));
             }
             result.push_str(&format!("\n{})", indent_str));
@@ -46,7 +46,7 @@ pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
                 result.push_str(&format!(
                     "\n{}  {}",
                     indent_str,
-                    pretty_print(item, indent + 1)
+                    _pretty_print(item, indent + 1)
                 ));
             }
             result.push_str(&format!("\n{})", indent_str));
@@ -57,6 +57,10 @@ pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
         Value::Bool(b) => b.to_string(),
         Value::Null => "null".to_string(),
     }
+}
+
+pub fn pretty_print(value: &Value) -> String {
+    _pretty_print(value, 0)
 }
 
 #[derive(Debug)]
