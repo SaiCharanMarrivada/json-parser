@@ -22,8 +22,8 @@ pub enum Value<'a> {
 /// - `dict = "(" [pair (" " pair)*] ")"`
 /// - `pair = "(" key " " value ")"`
 /// - `list = "(" [value (" "value)*] ")"`
-/// - The keys are printed without quotes
-/// - The atoms `(string | number | "true" | "false" | "null")` are printed as is
+/// - The keys are printed without quotes.
+/// - The atoms `(string | number | "true" | "false" | "null")` are printed as is.
 pub fn pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
     let indent_str = "  ".repeat(indent);
     match val {
