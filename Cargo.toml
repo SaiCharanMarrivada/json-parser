@@ -2,5 +2,9 @@
 name = "json_parser"
 version = "0.1.0"
 edition = "2024"
-
-[dependencies]
+authors = ["SaiCharanMarrivada", "<saicharanmarrivada5@gmail.com>"]
+description = "A simple json parser"
+license = "MIT"
+repository = "https://github.com/SaiCharanMarrivada/json-parser"
+readme = "README.md"
+categories = ["parsing"] 
