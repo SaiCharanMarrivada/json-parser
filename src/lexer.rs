@@ -62,7 +62,7 @@ impl<'a> Lexer<'a> {
         // consuming it
         let mut source_iter = self.source.char_indices().peekable();
 
-        while let Some((start, current)) = source_iter.next() {
+        'outer: while let Some((start, current)) = source_iter.next() {
             match current {
                 '[' => self.tokens.push(Token::LeftBracket(self.line)),
                 ']' => self.tokens.push(Token::RightBracket(self.line)),
@@ -88,22 +88,18 @@ impl<'a> Lexer<'a> {
                                 }
                             }
                         } else if current == '"' {
-                            break;
+                            self.tokens.push(Token::Str(string, string_start));
+                            continue 'outer;
                         } else {
                             string.push(current);
                             continue;
                         }
                     }
-                    match source_iter.peek() {
-                        Some(_) => self.tokens.push(Token::Str(string, string_start)),
-                        // reached EOF, so the string is not terminated
-                        None => {
-                            return Err(LexError::UnterminatedString(format!(
-                                "Unterminated string at line: {}",
-                                string_start
-                            )))
-                        }
-                    }
+                    // must have reached EOF, so the string is unterminated
+                    return Err(LexError::UnterminatedString(format!(
+                        "Unterminated string at line: {}",
+                        string_start
+                    )));
                 }
                 // skip whitespace
                 ' ' | '\r' | '\t' => continue,

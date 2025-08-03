@@ -3,7 +3,7 @@ use std::cell::Cell;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-enum Value<'a> {
+pub enum Value<'a> {
     Dict(HashMap<&'a str, Box<Value<'a>>>),
     List(Vec<Box<Value<'a>>>),
     Bool(bool),
@@ -13,7 +13,7 @@ enum Value<'a> {
 }
 
 #[derive(Debug)]
-enum ParseError {
+pub enum ParseError {
     UnexpectedToken(String),
     InvalidKey(String),
 }
@@ -149,12 +149,97 @@ impl Parser {
 }
 
 #[test]
-fn test_atoms() {
-    use crate::lexer::*;
-    let source = "3.14";
+fn test_string() {
+    use crate::lexer::Lexer;
+    let source = "\"test\"";
     let mut lexer = Lexer::new(source);
-    let _ = lexer.lex().unwrap();
+    lexer.lex().unwrap();
     let parser = Parser::new(lexer.tokens);
     let value = parser.parse().unwrap();
-    assert_eq!(value, Value::Number(3.14));
+    assert_eq!(value, Value::Str("test"));
+}
+
+#[test]
+fn test_number() {
+    use crate::lexer::Lexer;
+    let source = "3.14e-8";
+    let mut lexer = Lexer::new(source);
+    lexer.lex().unwrap();
+    let parser = Parser::new(lexer.tokens);
+    let value = parser.parse().unwrap();
+    assert_eq!(value, Value::Number(3.14e-8));
+}
+
+#[test]
+fn test_true() {
+    use crate::lexer::Lexer;
+    let source = "true";
+    let mut lexer = Lexer::new(source);
+    lexer.lex().unwrap();
+    let parser = Parser::new(lexer.tokens);
+    let value = parser.parse().unwrap();
+    assert_eq!(value, Value::Bool(true));
+}
+
+#[test]
+fn test_nested_structures() {
+    use crate::lexer::Lexer;
+    let input = r#"
+        {
+            "description": "The test case description",
+            "schema": { "type": "string" },
+            "tests": [
+                {
+                    "description": "a test with a valid instance",
+                    "data": "a string",
+                    "valid": true
+                },
+                {
+                    "description": "a test with an invalid instance",
+                    "data": 15,
+                    "valid": false
+                }
+            ]
+        }
+        "#;
+
+    let mut lexer = Lexer::new(input);
+    lexer.lex().unwrap();
+    let parser = Parser::new(lexer.tokens);
+    let parsed = parser.parse().unwrap();
+
+    let mut expected_map = std::collections::HashMap::new();
+
+    expected_map.insert(
+        "description",
+        Box::new(Value::Str("The test case description")),
+    );
+
+    let mut schema_map = std::collections::HashMap::new();
+    schema_map.insert("type", Box::new(Value::Str("string")));
+    expected_map.insert("schema", Box::new(Value::Dict(schema_map)));
+
+    let mut test1 = std::collections::HashMap::new();
+    test1.insert(
+        "description",
+        Box::new(Value::Str("a test with a valid instance")),
+    );
+    test1.insert("data", Box::new(Value::Str("a string")));
+    test1.insert("valid", Box::new(Value::Bool(true)));
+
+    let mut test2 = std::collections::HashMap::new();
+    test2.insert(
+        "description",
+        Box::new(Value::Str("a test with an invalid instance")),
+    );
+    test2.insert("data", Box::new(Value::Number(15.0)));
+    test2.insert("valid", Box::new(Value::Bool(false)));
+
+    let test_list = vec![Box::new(Value::Dict(test1)), Box::new(Value::Dict(test2))];
+
+    expected_map.insert("tests", Box::new(Value::List(test_list)));
+
+    let expected = Value::Dict(expected_map);
+
+    assert_eq!(parsed, expected);
 }
