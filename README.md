@@ -34,7 +34,7 @@ let source = r#"
 
 let mut lexer = Lexer::new(source);
 let _ = lexer.lex().unwrap();
-let parser = Parser::new(lexer::tokens);
+let parser = Parser::new(lexer.tokens);
 let value = parser.parse().unwrap();
 
 println!("{}", pretty_print(value)); // prints the S-expression for the JSON object
