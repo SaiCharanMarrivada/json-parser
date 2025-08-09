@@ -24,7 +24,7 @@ pub enum Value<'a> {
 /// - `list = "(" [value (" "value)*] ")"`
 /// - The keys are printed without quotes.
 /// - The atoms `(string | number | "true" | "false" | "null")` are printed as is.
-fn _pretty_print<'a>(val: &Value<'a>, indent: usize) -> String {
+fn _pretty_print(val: &Value<'_>, indent: usize) -> String {
     let indent_str = "  ".repeat(indent);
     match val {
         Value::Dict(map) => {
@@ -115,7 +115,7 @@ impl Parser {
                 }
                 let value = self.parse_value()?;
                 self.advance();
-                result.insert(&s, value);
+                result.insert(s, value);
             } else {
                 return Err(ParseError::InvalidKey(format!(
                     "Expected string for key, got {}",
@@ -171,10 +171,10 @@ impl Parser {
     fn parse_value(&self) -> Result<Value, ParseError> {
         match &self.tokens[self.current.get()] {
             // atoms
-            Token::Str(s, _) => return Ok(Value::Str(&s)),
-            Token::Bool(b, _) => return Ok(Value::Bool(*b)),
-            Token::Number(n, _) => return Ok(Value::Number(*n)),
-            Token::Null(_) => return Ok(Value::Null),
+            Token::Str(s, _) => Ok(Value::Str(s)),
+            Token::Bool(b, _) => Ok(Value::Bool(*b)),
+            Token::Number(n, _) => Ok(Value::Number(*n)),
+            Token::Null(_) => Ok(Value::Null),
             // list
             Token::LeftBracket(_) => {
                 // handle empty list
