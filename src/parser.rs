@@ -122,9 +122,7 @@ impl Parser {
                     &self.tokens[self.current.get()]
                 )));
             }
-            if let Token::Comma(_) = &self.tokens[self.current.get()] {
-                continue;
-            } else {
+            if !matches!(self.tokens[self.current.get()], Token::Comma(_)) {
                 break;
             }
         }
@@ -146,9 +144,7 @@ impl Parser {
             let value = self.parse_value()?;
             result.push(value);
             self.advance();
-            if let Token::Comma(_) = &self.tokens[self.current.get()] {
-                continue;
-            } else {
+            if !matches!(self.tokens[self.current.get()], Token::Comma(_)) {
                 break;
             }
         }
@@ -234,6 +230,27 @@ fn test_true() {
     let parser = Parser::new(lexer.tokens);
     let value = parser.parse().unwrap();
     assert_eq!(value, Value::Bool(true));
+}
+
+#[test]
+fn test_list() {
+    use crate::lexer::Lexer;
+    let source = "[1, 2.2, \"string\", {\"test\": \"test_list\"}]";
+    let mut lexer = Lexer::new(source);
+    lexer.lex().unwrap();
+    let parser = Parser::new(lexer.tokens);
+    let value = parser.parse().unwrap();
+    let mut hashmap = HashMap::new();
+    hashmap.insert("test", Value::Str("test_list"));
+    assert_eq!(
+        value,
+        Value::List(vec![
+            Value::Number(1.0),
+            Value::Number(2.2),
+            Value::Str("string"),
+            Value::Dict(hashmap)
+        ])
+    );
 }
 
 #[test]
