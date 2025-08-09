@@ -9,8 +9,8 @@ use std::collections::HashMap;
 /// - `pair = string ":" value`
 #[derive(Debug, PartialEq)]
 pub enum Value<'a> {
-    Dict(HashMap<&'a str, Box<Value<'a>>>),
-    List(Vec<Box<Value<'a>>>),
+    Dict(HashMap<&'a str, Value<'a>>),
+    List(Vec<Value<'a>>),
     Bool(bool),
     Str(&'a str),
     Number(f64),
@@ -99,8 +99,8 @@ impl Parser {
 
     /// `dict = "{" pair ("," pair)* "}"`
     /// `pair = string ":" value`
-    fn parse_dict(&self) -> Result<HashMap<&str, Box<Value>>, ParseError> {
-        let mut result: HashMap<&str, Box<Value>> = HashMap::new();
+    fn parse_dict(&self) -> Result<HashMap<&str, Value>, ParseError> {
+        let mut result: HashMap<&str, Value> = HashMap::new();
         loop {
             self.advance();
             if let Token::Str(s, _) = &self.tokens[self.current.get()] {
@@ -115,7 +115,7 @@ impl Parser {
                 }
                 let value = self.parse_value()?;
                 self.advance();
-                result.insert(&s, Box::new(value));
+                result.insert(&s, value);
             } else {
                 return Err(ParseError::InvalidKey(format!(
                     "Expected string for key, got {}",
@@ -139,12 +139,12 @@ impl Parser {
     }
 
     /// `list = "["value ("," value)*"]"`
-    fn parse_list(&self) -> Result<Vec<Box<Value>>, ParseError> {
+    fn parse_list(&self) -> Result<Vec<Value>, ParseError> {
         let mut result = Vec::new();
         loop {
             self.advance();
             let value = self.parse_value()?;
-            result.push(Box::new(value));
+            result.push(value);
             self.advance();
             if let Token::Comma(_) = &self.tokens[self.current.get()] {
                 continue;
@@ -265,34 +265,25 @@ fn test_nested_structures() {
 
     let mut expected_map = std::collections::HashMap::new();
 
-    expected_map.insert(
-        "description",
-        Box::new(Value::Str("The test case description")),
-    );
+    expected_map.insert("description", Value::Str("The test case description"));
 
     let mut schema_map = std::collections::HashMap::new();
-    schema_map.insert("type", Box::new(Value::Str("string")));
-    expected_map.insert("schema", Box::new(Value::Dict(schema_map)));
+    schema_map.insert("type", Value::Str("string"));
+    expected_map.insert("schema", Value::Dict(schema_map));
 
     let mut test1 = std::collections::HashMap::new();
-    test1.insert(
-        "description",
-        Box::new(Value::Str("a test with a valid instance")),
-    );
-    test1.insert("data", Box::new(Value::Str("a string")));
-    test1.insert("valid", Box::new(Value::Bool(true)));
+    test1.insert("description", Value::Str("a test with a valid instance"));
+    test1.insert("data", Value::Str("a string"));
+    test1.insert("valid", Value::Bool(true));
 
     let mut test2 = std::collections::HashMap::new();
-    test2.insert(
-        "description",
-        Box::new(Value::Str("a test with an invalid instance")),
-    );
-    test2.insert("data", Box::new(Value::Number(15.0)));
-    test2.insert("valid", Box::new(Value::Bool(false)));
+    test2.insert("description", Value::Str("a test with an invalid instance"));
+    test2.insert("data", Value::Number(15.0));
+    test2.insert("valid", Value::Bool(false));
 
-    let test_list = vec![Box::new(Value::Dict(test1)), Box::new(Value::Dict(test2))];
+    let test_list = vec![Value::Dict(test1), Value::Dict(test2)];
 
-    expected_map.insert("tests", Box::new(Value::List(test_list)));
+    expected_map.insert("tests", Value::List(test_list));
 
     let expected = Value::Dict(expected_map);
 
